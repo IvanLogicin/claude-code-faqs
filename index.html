@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Claude Code FAQ</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-size: 13px;
+      line-height: 1.45;
+      color: #1a1a2e;
+      background: #f4f6fb;
+    }
+
+    header {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 60%, #0f3460 100%);
+      color: #fff;
+      padding: 22px 40px 16px;
+    }
+
+    header h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      margin-bottom: 5px;
+    }
+
+    header p {
+      font-size: 0.82rem;
+      color: #a8b8d8;
+      max-width: 800px;
+    }
+
+    header .meta {
+      margin-top: 8px;
+      font-size: 0.75rem;
+      color: #6a7fa8;
+    }
+
+    nav {
+      background: #fff;
+      border-bottom: 1px solid #e0e6f0;
+      padding: 0 40px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0;
+    }
+
+    nav a {
+      display: inline-block;
+      padding: 8px 13px;
+      color: #0f3460;
+      text-decoration: none;
+      font-size: 0.78rem;
+      font-weight: 500;
+      border-bottom: 2px solid transparent;
+      transition: border-color 0.2s, color 0.2s;
+      white-space: nowrap;
+    }
+
+    nav a:hover {
+      border-bottom-color: #0f3460;
+      color: #0f3460;
+    }
+
+    main {
+      max-width: 1100px;
+      margin: 18px auto;
+      padding: 0 24px 30px;
+    }
+
+    section {
+      background: #fff;
+      border-radius: 8px;
+      border: 1px solid #111;
+      box-shadow: 0 2px 10px rgba(15,52,96,0.07);
+      margin-bottom: 21px;
+    }
+
+    /* ── Section H2 header: olive green → black ───────────────── */
+    .section-header {
+      background: linear-gradient(90deg, #4a5e1a 0%, #2c3a10 55%, #0f0f08 100%);
+      color: #fff;
+      padding: 9px 18px;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      border-radius: 8px 8px 0 0;
+    }
+
+    .section-header .icon {
+      font-size: 1rem;
+      line-height: 1;
+    }
+
+    .section-header h2 {
+      font-size: 0.9rem;
+      font-weight: 600;
+      letter-spacing: 0.01em;
+    }
+
+    .section-body {
+      padding: 13px 18px;
+      border-radius: 0 0 8px 8px;
+    }
+
+    /* ── H3: crimson pill-tab style ───────────────────────────── */
+    h3 {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: #7a1a2e;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      margin: 12px -18px 7px;
+      padding: 4px 18px 4px 18px;
+      background: linear-gradient(90deg, #f5e8eb 0%, #fdf8f9 100%);
+      border-left: 3px solid #a82840;
+      display: block;
+    }
+
+    h3:first-child { margin-top: 0; }
+
+    p { margin-bottom: 7px; color: #2d3a50; }
+    p:last-child { margin-bottom: 0; }
+
+    ul, ol {
+      margin: 4px 0 8px 18px;
+      color: #2d3a50;
+    }
+
+    li { margin-bottom: 3px; }
+
+    /* ── Hint bubble system ────────────────────────────────────── */
+
+    .hint-wrapper {
+      position: relative;
+      display: inline-block;
+      margin: 6px 0 4px;
+    }
+
+    .hint-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 10px 3px 8px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      font-family: inherit;
+      background: #fff4e6;
+      color: #8a4200;
+      border: 1px solid #e8b870;
+      border-radius: 4px;
+      cursor: pointer;
+      letter-spacing: 0.02em;
+      transition: background 0.15s, border-color 0.15s;
+      user-select: none;
+    }
+
+    .hint-btn:hover {
+      background: #ffe8c8;
+      border-color: #d08030;
+    }
+
+    .hint-btn .hint-arrow {
+      font-size: 0.65rem;
+      transition: transform 0.2s;
+      display: inline-block;
+    }
+
+    .hint-btn.open .hint-arrow {
+      transform: rotate(90deg);
+    }
+
+    .hint-bubble {
+      display: none;
+      position: absolute;
+      left: calc(100% + 12px);
+      top: 50%;
+      transform: translateY(-50%);
+      width: 290px;
+      background: #fff;
+      border: 1px solid #e8b870;
+      border-left: 4px solid #c87820;
+      border-radius: 0 6px 6px 0;
+      padding: 9px 13px;
+      box-shadow: 0 4px 18px rgba(140,80,0,0.13);
+      z-index: 300;
+      font-size: 0.8rem;
+      color: #1a2a44;
+      line-height: 1.45;
+    }
+
+    .hint-bubble::before {
+      content: "";
+      position: absolute;
+      left: -9px;
+      top: 50%;
+      transform: translateY(-50%);
+      border-width: 7px 8px 7px 0;
+      border-style: solid;
+      border-color: transparent #e8b870 transparent transparent;
+    }
+
+    .hint-bubble::after {
+      content: "";
+      position: absolute;
+      left: -7px;
+      top: 50%;
+      transform: translateY(-50%);
+      border-width: 6px 7px 6px 0;
+      border-style: solid;
+      border-color: transparent #fff transparent transparent;
+    }
+
+    .hint-bubble.visible { display: block; }
+
+    /* ── Tables ───────────────────────────────────────────────── */
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 7px 0;
+      font-size: 0.8rem;
+    }
+
+    thead tr {
+      background: #0f3460;
+      color: #fff;
+    }
+
+    thead th {
+      padding: 7px 11px;
+      text-align: left;
+      font-weight: 600;
+      font-size: 0.72rem;
+      letter-spacing: 0.04em;
+    }
+
+    tbody tr:nth-child(even) { background: #f4f7fc; }
+    tbody tr:hover { background: #e8eef8; }
+
+    tbody td {
+      padding: 6px 11px;
+      border-bottom: 1px solid #e0e8f4;
+      color: #2d3a50;
+      vertical-align: top;
+    }
+
+    code {
+      font-family: "JetBrains Mono", "Fira Mono", "Cascadia Code", monospace;
+      background: #eef2fa;
+      color: #0f3460;
+      padding: 1px 5px;
+      border-radius: 3px;
+      font-size: 0.82em;
+    }
+
+    kbd {
+      font-family: "JetBrains Mono", "Fira Mono", monospace;
+      background: #e4e9f4;
+      border: 1px solid #b0bdd8;
+      border-bottom-width: 2px;
+      color: #1a2a44;
+      padding: 1px 5px;
+      border-radius: 3px;
+      font-size: 0.82em;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 1px 7px;
+      border-radius: 20px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+    }
+
+    .badge.yes   { background: #d1f5e3; color: #0e6640; }
+    .badge.no    { background: #fde0e0; color: #8b1a1a; }
+    .badge.maybe { background: #fef3d0; color: #7a5000; }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin: 7px 0;
+    }
+
+    .card {
+      background: #f4f7fc;
+      border: 1px solid #dce6f5;
+      border-radius: 6px;
+      padding: 9px 12px;
+    }
+
+    .card h4 {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: #0f3460;
+      margin-bottom: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .card ul { margin: 0 0 0 14px; }
+    .card p  { font-size: 0.8rem; margin: 0; }
+
+    footer {
+      text-align: center;
+      color: #8a9ab8;
+      font-size: 0.72rem;
+      padding: 14px 0 28px;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Claude Code &mdash; FAQ &amp; Reference</h1>
+  <p>A structured summary of common questions about Claude Code: how it works, what it can access, and how to get the most out of it. Intended as a starting point for internal FAQ documentation.</p>
+  <p class="meta">Compiled from a team Q&amp;A session &bull; March 2026</p>
+</header>
+
+<nav>
+  <a href="#welcome">Welcome Screen</a>
+  <a href="#thinking">Thinking Mode</a>
+  <a href="#cloud">Cloud vs Local</a>
+  <a href="#vs-claude">Claude Code vs Claude</a>
+  <a href="#tools">Available Tools</a>
+  <a href="#files">File Support</a>
+  <a href="#google">Google Docs</a>
+  <a href="#sessions">Sessions &amp; Context</a>
+  <a href="#claudemd">CLAUDE.md Files</a>
+</nav>
+
+<main>
+
+  <!-- 1. WELCOME SCREEN -->
+  <section id="welcome">
+    <div class="section-header">
+      <span class="icon">&#128250;</span>
+      <h2>Welcome Screen Customization</h2>
+    </div>
+    <div class="section-body">
+      <p>When you run <code>claude</code> in the terminal, a welcome panel appears showing your name, recent activity, and getting-started tips.</p>
+
+      <div class="hint-wrapper">
+        <button class="hint-btn" onclick="toggleHint(this)">
+          Extra Notes <span class="hint-arrow">&#9656;</span>
+        </button>
+        <div class="hint-bubble">
+          <strong>Not currently customizable.</strong> The welcome screen is generated by the Claude Code application itself and is not driven by any locally editable config file. To request this feature, file an issue at <code>github.com/anthropics/claude-code/issues</code>.
+        </div>
+      </div>
+
+      <h3>What Is Configurable</h3>
+      <ul>
+        <li><strong>Status line</strong> (the bar shown during a session) &mdash; use the <code>/statusline</code> command</li>
+        <li><strong>Theme, model, effort level</strong> &mdash; via <code>/config</code></li>
+        <li><strong>Permissions, hooks, env vars</strong> &mdash; via <code>~/.claude/settings.json</code> or project-level <code>.claude/settings.json</code></li>
+        <li><strong>Keyboard shortcuts</strong> &mdash; via <code>~/.claude/keybindings.json</code></li>
+      </ul>
+      <h3>Where Settings Live</h3>
+      <table>
+        <thead><tr><th>Scope</th><th>Location</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td>Global (user)</td><td><code>~/.claude/settings.json</code></td><td>Applies to all projects</td></tr>
+          <tr><td>Project (shared)</td><td><code>.claude/settings.json</code></td><td>Committed to git, shared with team</td></tr>
+          <tr><td>Project (local)</td><td><code>.claude/settings.local.json</code></td><td>Gitignored, personal overrides</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 2. THINKING MODE -->
+  <section id="thinking">
+    <div class="section-header">
+      <span class="icon">&#129504;</span>
+      <h2>Thinking Mode &amp; Effort Levels</h2>
+    </div>
+    <div class="section-body">
+      <p><strong>Thinking mode</strong> gives Claude extra compute to reason through a problem step-by-step before responding (visible as a collapsible "thinking" block). It uses the same model &mdash; no model switch occurs.</p>
+
+      <div class="two-col">
+        <div class="card">
+          <h4>What you gain with thinking ON</h4>
+          <ul>
+            <li>Deeper reasoning on complex problems</li>
+            <li>Better architecture &amp; logic decisions</li>
+            <li>More reliable multi-step answers</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h4>What you gain with thinking OFF</h4>
+          <ul>
+            <li>Faster responses</li>
+            <li>Lower token usage</li>
+            <li>Better for simple, quick tasks</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="hint-wrapper">
+        <button class="hint-btn" onclick="toggleHint(this)">
+          Extra Notes <span class="hint-arrow">&#9656;</span>
+        </button>
+        <div class="hint-bubble">
+          Turning thinking off has <strong>zero effect</strong> on Claude's ability to read project files or documentation. File access is handled by separate tools, not the reasoning system.
+        </div>
+      </div>
+
+      <h3>How to Control It</h3>
+      <table>
+        <thead><tr><th>Method</th><th>Action</th></tr></thead>
+        <tbody>
+          <tr><td><kbd>Alt+T</kbd></td><td>Toggle thinking on/off during a session</td></tr>
+          <tr><td><code>/effort</code> command</td><td>Set a specific level: <code>off</code>, <code>low</code>, <code>medium</code>, <code>high</code>, <code>max</code></td></tr>
+          <tr><td>Default</td><td><code>auto</code> (currently resolves to <code>medium</code>)</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Switching Mid-Session</h3>
+      <p>The warning shown when toggling is a heads-up about latency, not a sign of a real problem. Switching mid-session is safe &mdash; it affects how the next message is processed, not past context.</p>
+
+      <h3>Parallel Instances</h3>
+      <p>Running multiple <code>claude</code> terminals simultaneously is fully supported. Each session is independent with its own context. This is useful for genuinely parallel workflows, but not necessary just to manage thinking mode.</p>
+    </div>
+  </section>
+
+  <!-- 3. CLOUD VS LOCAL -->
+  <section id="cloud">
+    <div class="section-header">
+      <span class="icon">&#9729;&#65039;</span>
+      <h2>Cloud Processing vs Local Resources</h2>
+    </div>
+    <div class="section-body">
+      <h3>How It Works</h3>
+      <p><strong>All AI processing happens on Anthropic's servers.</strong> Your laptop only runs the Claude Code CLI (a lightweight Node.js app) which sends messages to the API and displays responses.</p>
+      <h3>What This Means Practically</h3>
+      <ul>
+        <li>Your laptop's CPU, RAM, and GPU have <strong>no effect</strong> on response speed or quality</li>
+        <li>Switching to a faster PC will <strong>not</strong> improve response speed</li>
+        <li>Speed is determined by: network latency + Anthropic server load + thinking budget allocated</li>
+        <li>A faster internet connection may help marginally</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 4. CLAUDE CODE VS CLAUDE -->
+  <section id="vs-claude">
+    <div class="section-header">
+      <span class="icon">&#9878;&#65039;</span>
+      <h2>Claude Code vs Claude (Web/API)</h2>
+    </div>
+    <div class="section-body">
+      <p>Claude Code uses the <strong>same base model</strong> as Claude.ai (e.g., Sonnet 4.6). It is not a fine-tuned or modified variant.</p>
+      <h3>What Makes Claude Code Different</h3>
+      <table>
+        <thead><tr><th>Feature</th><th>Claude Code</th><th>Claude.ai (web)</th></tr></thead>
+        <tbody>
+          <tr><td>Base model</td><td>Sonnet 4.6 (or chosen model)</td><td>Same models available</td></tr>
+          <tr><td>System prompt</td><td>Coding-assistant system prompt injected by Anthropic</td><td>Minimal or no system prompt</td></tr>
+          <tr><td>Filesystem access</td><td>Yes (Read, Write, Edit, Bash, etc.)</td><td>No</td></tr>
+          <tr><td>Project context</td><td><code>CLAUDE.md</code> files auto-loaded</td><td>Manual paste only</td></tr>
+          <tr><td>Shell execution</td><td>Yes (with permission)</td><td>No</td></tr>
+          <tr><td>Web access</td><td>WebFetch + WebSearch tools</td><td>Limited, varies by plan</td></tr>
+        </tbody>
+      </table>
+
+      <div class="hint-wrapper">
+        <button class="hint-btn" onclick="toggleHint(this)">
+          Extra Notes <span class="hint-arrow">&#9656;</span>
+        </button>
+        <div class="hint-bubble">
+          Project files are <strong>not pre-loaded</strong> into context. Claude reads them on demand using Read/Grep tools when it determines they're relevant.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5. TOOLS -->
+  <section id="tools">
+    <div class="section-header">
+      <span class="icon">&#128295;</span>
+      <h2>Available Tools in Claude Code</h2>
+    </div>
+    <div class="section-body">
+      <table>
+        <thead><tr><th>Category</th><th>Tools</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>Filesystem</td>
+            <td><code>Read</code>, <code>Write</code>, <code>Edit</code>, <code>Glob</code>, <code>Grep</code></td>
+            <td>Read/write/search files and directories</td>
+          </tr>
+          <tr>
+            <td>Shell</td>
+            <td><code>Bash</code></td>
+            <td>Execute terminal commands (with user permission)</td>
+          </tr>
+          <tr>
+            <td>Web</td>
+            <td><code>WebFetch</code>, <code>WebSearch</code></td>
+            <td>Fetch web pages and search the internet</td>
+          </tr>
+          <tr>
+            <td>Agents &amp; Tasks</td>
+            <td><code>Agent</code>, <code>TaskCreate</code>, <code>TaskGet</code>, <code>TaskList</code>, <code>TaskUpdate</code>, <code>TaskStop</code>, <code>TaskOutput</code></td>
+            <td>Spawn subagents and manage parallel tasks</td>
+          </tr>
+          <tr>
+            <td>Scheduling</td>
+            <td><code>CronCreate</code>, <code>CronDelete</code>, <code>CronList</code>, <code>RemoteTrigger</code></td>
+            <td>Schedule recurring agents and remote triggers</td>
+          </tr>
+          <tr>
+            <td>Workflow</td>
+            <td><code>EnterPlanMode</code>, <code>ExitPlanMode</code>, <code>EnterWorktree</code>, <code>ExitWorktree</code></td>
+            <td>Plan mode and isolated git worktrees</td>
+          </tr>
+          <tr>
+            <td>Notebooks</td>
+            <td><code>NotebookEdit</code></td>
+            <td>Edit Jupyter notebooks</td>
+          </tr>
+          <tr>
+            <td>Meta</td>
+            <td><code>Skill</code>, <code>ToolSearch</code>, <code>AskUserQuestion</code></td>
+            <td>Invoke skills, search tool schemas, ask clarifying questions</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 6. FILE SUPPORT -->
+  <section id="files">
+    <div class="section-header">
+      <span class="icon">&#128196;</span>
+      <h2>File Format Support &amp; Limits</h2>
+    </div>
+    <div class="section-body">
+
+      <h3>PDF Files</h3>
+      <p>Claude reads PDFs <strong>visually</strong> (as rendered page images), not by extracting raw text. This means:</p>
+      <ul>
+        <li><strong>Non-OCR'd / scanned PDFs:</strong> Readable &mdash; Claude sees the page like a human would</li>
+        <li><strong>Bad OCR / garbled text layer:</strong> Not an issue &mdash; Claude reads the visual rendering, not the broken text</li>
+        <li><strong>Limit:</strong> 20 pages per request. Large PDFs must be read in chunks using page ranges</li>
+      </ul>
+
+      <h3>Plain Text &amp; CSV</h3>
+      <p>Read line-by-line. Default is <strong>2,000 lines</strong> per read. Larger files can be paginated using <code>offset</code> and <code>limit</code> parameters. No hard file size cap &mdash; just pagination.</p>
+
+      <h3>Word (.docx) &amp; Excel (.xlsx)</h3>
+      <p>Native support is uncertain &mdash; these are binary formats and may not be directly readable by the <code>Read</code> tool. Workarounds include converting them via <code>Bash</code> (e.g., using <code>libreoffice --headless</code>, <code>python-docx</code>, or <code>openpyxl</code>). To be verified with live testing.</p>
+
+      <h3>Summary Table</h3>
+      <table>
+        <thead><tr><th>Format</th><th>Supported</th><th>Limit</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td>PDF (text-based)</td><td><span class="badge yes">Yes</span></td><td>20 pages/request</td><td>Visual render, chunked for large files</td></tr>
+          <tr><td>PDF (scanned/no OCR)</td><td><span class="badge yes">Yes</span></td><td>20 pages/request</td><td>Visual reading bypasses OCR issues</td></tr>
+          <tr><td>Images (PNG, JPG, etc.)</td><td><span class="badge yes">Yes</span></td><td>Per image</td><td>Multimodal, reads visually</td></tr>
+          <tr><td>Plain text / CSV</td><td><span class="badge yes">Yes</span></td><td>2,000 lines/read</td><td>Paginated with offset</td></tr>
+          <tr><td>Jupyter Notebooks (.ipynb)</td><td><span class="badge yes">Yes</span></td><td>Standard</td><td>Reads cells + outputs</td></tr>
+          <tr><td>Word (.docx)</td><td><span class="badge maybe">Uncertain</span></td><td>Unknown</td><td>May need conversion via Bash</td></tr>
+          <tr><td>Excel (.xlsx)</td><td><span class="badge maybe">Uncertain</span></td><td>Unknown</td><td>May need conversion via Bash</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 7. GOOGLE DOCS -->
+  <section id="google">
+    <div class="section-header">
+      <span class="icon">&#128196;</span>
+      <h2>Google Docs Access</h2>
+    </div>
+    <div class="section-body">
+      <p>Claude Code can access Google Docs via the <code>WebFetch</code> tool, but accessibility depends on how the document is shared.</p>
+
+      <h3>Access by Share Type</h3>
+      <table>
+        <thead><tr><th>Source</th><th>Accessible?</th><th>Content Quality</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>Private Google Doc</td>
+            <td><span class="badge no">No</span></td>
+            <td>&mdash;</td>
+            <td>Requires login, blocked entirely</td>
+          </tr>
+          <tr>
+            <td>"Anyone with link" (raw URL)</td>
+            <td><span class="badge maybe">Unreliable</span></td>
+            <td>Messy</td>
+            <td>Google Docs is a JS app; raw fetch returns incomplete HTML</td>
+          </tr>
+          <tr>
+            <td>"Anyone with link" + export URL</td>
+            <td><span class="badge yes">Yes</span></td>
+            <td>Clean</td>
+            <td>Append <code>/export?format=txt</code> or <code>/export?format=pdf</code> to the doc URL</td>
+          </tr>
+          <tr>
+            <td>Published to Web (<code>/pub</code> URL)</td>
+            <td><span class="badge yes">Yes</span></td>
+            <td>Clean</td>
+            <td>Renders as static HTML, best option for sharing with Claude</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>Recommended Approaches</h3>
+      <ol>
+        <li><strong>Publish to Web</strong> (File &rarr; Share &rarr; Publish to Web) &mdash; cleanest, most reliable</li>
+        <li><strong>Export URL trick</strong> for publicly shared docs &mdash; no republishing needed:
+          <ul>
+            <li>Plain text: <code>https://docs.google.com/document/d/[DOC_ID]/export?format=txt</code></li>
+            <li>PDF: <code>https://docs.google.com/document/d/[DOC_ID]/export?format=pdf</code></li>
+          </ul>
+        </li>
+      </ol>
+
+      <div class="hint-wrapper">
+        <button class="hint-btn" onclick="toggleHint(this)">
+          Extra Notes <span class="hint-arrow">&#9656;</span>
+        </button>
+        <div class="hint-bubble">
+          The same access patterns apply to <strong>Google Sheets</strong> &mdash; export as <code>format=csv</code> or <code>format=xlsx</code> from a publicly shared sheet.
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- 8. SESSIONS & CONTEXT -->
+  <section id="sessions">
+    <div class="section-header">
+      <span class="icon">&#128190;</span>
+      <h2>Sessions &amp; Context — How They Work</h2>
+    </div>
+    <div class="section-body">
+      <p>Every conversation you have with Claude Code is a <strong>session</strong>. Sessions are saved automatically and can be resumed later, even after closing the terminal or rebooting.</p>
+
+      <h3>Where Sessions Are Stored</h3>
+      <p>Everything is stored <strong>locally on your machine</strong> — nothing conversation-related is sent to or stored in Anthropic's cloud.</p>
+      <table>
+        <thead><tr><th>Path</th><th>Contents</th></tr></thead>
+        <tbody>
+          <tr><td><code>~/.claude/sessions/</code></td><td>General session metadata</td></tr>
+          <tr><td><code>~/.claude/projects/[folder-path]/</code></td><td>Per-project conversation logs, one <code>.jsonl</code> file per session</td></tr>
+          <tr><td><code>~/.claude/history.jsonl</code></td><td>Your command/input history across all sessions</td></tr>
+        </tbody>
+      </table>
+      <p>The project subfolder name is derived from your working directory path (e.g., <code>-home-ivan-Documents-my-project</code>). Your actual project folder only ever contains files you explicitly create.</p>
+
+      <h3>File Format</h3>
+      <p>Sessions are stored as <strong>.jsonl files</strong> (JSON Lines) — one JSON object per line, each representing a message or event in the conversation. They are plain text and can be opened in any text editor. Each file is named with a UUID (e.g., <code>23f012d1-0f95-48d2-8258-60017da99dfd.jsonl</code>).</p>
+
+      <h3>How to Resume a Session</h3>
+      <ol>
+        <li>Open a terminal and navigate to your project folder (important — so the right <code>CLAUDE.md</code> loads)</li>
+        <li>Run <code>claude</code></li>
+        <li>Type <code>/resume</code> — a list of recent sessions appears, sorted by date</li>
+        <li>Use <kbd>&uarr;</kbd> / <kbd>&darr;</kbd> arrow keys to select the session, then press <kbd>Enter</kbd></li>
+        <li>The full conversation is re-rendered in the terminal and you can scroll back through all of it</li>
+      </ol>
+      <div class="hint-wrapper">
+        <button class="hint-btn" onclick="toggleHint(this)">
+          Extra Notes <span class="hint-arrow">&#9656;</span>
+        </button>
+        <div class="hint-bubble">
+          If a session doesn't appear in the <code>/resume</code> list (e.g., it's older), you can find it manually by running <code>ls -lht ~/.claude/projects/[your-folder]/</code> to list sessions by date, then pass the UUID directly to <code>/resume</code>.
+        </div>
+      </div>
+
+      <h3>Auto-Deletion Policy</h3>
+      <p>There is no documented auto-expiry for sessions. Files persist until you delete them manually. Sessions are small (a long conversation is typically only a few MB), so disk space is rarely a concern. To manually remove a session, delete its <code>.jsonl</code> file from the project folder under <code>~/.claude/projects/</code>.</p>
+    </div>
+  </section>
+
+  <!-- 9. CLAUDE.md -->
+  <section id="claudemd">
+    <div class="section-header">
+      <span class="icon">&#128221;</span>
+      <h2>CLAUDE.md — Project &amp; Global Instructions</h2>
+    </div>
+    <div class="section-body">
+      <p><code>CLAUDE.md</code> is a plain Markdown file that Claude Code reads automatically at the start of every session. It lets you give Claude standing instructions, project context, and preferences without repeating yourself each time.</p>
+
+      <h3>Global vs Project-Specific</h3>
+      <table>
+        <thead><tr><th>Type</th><th>Location</th><th>Scope</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>Global</td>
+            <td><code>~/.claude/CLAUDE.md</code></td>
+            <td>Loaded in <em>every</em> Claude Code session, regardless of folder</td>
+          </tr>
+          <tr>
+            <td>Project-specific</td>
+            <td><code>[project-folder]/CLAUDE.md</code></td>
+            <td>Loaded only when Claude Code is started from that folder</td>
+          </tr>
+        </tbody>
+      </table>
+      <p>Both files are loaded together when present — global first, then project-specific on top. Project instructions override or extend global ones.</p>
+
+      <h3>How to Create One</h3>
+      <p>Just create the file — Claude Code picks it up automatically on the next session start. No configuration required.</p>
+      <ul>
+        <li>Global: create <code>~/.claude/CLAUDE.md</code> in your home directory</li>
+        <li>Project: create <code>CLAUDE.md</code> in the root of your project folder (where you run <code>claude</code> from)</li>
+        <li>You can also ask Claude to write or update it for you during a session</li>
+      </ul>
+
+      <h3>What to Put In It</h3>
+      <p>Good candidates for <code>CLAUDE.md</code> content:</p>
+      <ul>
+        <li><strong>Tone &amp; style rules</strong> — "be concise", "avoid bullet points unless asked", "use formal language"</li>
+        <li><strong>Project conventions</strong> — naming patterns, versioning rules, folder structure notes</li>
+        <li><strong>Standing preferences</strong> — "never overwrite previous file versions", "always confirm before deleting"</li>
+        <li><strong>Background context</strong> — what the project is, who the audience is, current state of work</li>
+        <li><strong>Recurring instructions</strong> — things you find yourself repeating every session</li>
+      </ul>
+
+      <h3>How Much Is Too Much</h3>
+      <p>Keep it <strong>focused and scannable</strong>. A <code>CLAUDE.md</code> that is too long becomes noise — Claude reads all of it, but dense walls of text dilute the signal. Practical guidelines:</p>
+      <ul>
+        <li>Aim for under ~100 lines for a project file; under ~50 for a global file</li>
+        <li>Prefer bullet points and short sentences over paragraphs</li>
+        <li>Only include things that are <em>non-obvious</em> or that Claude wouldn't infer from the code itself</li>
+        <li>Remove instructions that no longer apply — stale context causes confusion</li>
+        <li>Don't duplicate things already visible in the codebase (file names, obvious conventions)</li>
+      </ul>
+      <div class="hint-wrapper">
+        <button class="hint-btn" onclick="toggleHint(this)">
+          Extra Notes <span class="hint-arrow">&#9656;</span>
+        </button>
+        <div class="hint-bubble">
+          <code>CLAUDE.md</code> is just a plain text Markdown file — you can edit it at any time in any text editor. Changes take effect at the start of the next session (or if Claude re-reads it mid-session using the Read tool).
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <p>Generated by Claude Code (Sonnet 4.6) &bull; March 2026 &bull; For internal use &mdash; verify details before publishing externally</p>
+</footer>
+
+<script>
+  function toggleHint(btn) {
+    const bubble = btn.nextElementSibling;
+    const isOpen = bubble.classList.contains('visible');
+
+    document.querySelectorAll('.hint-bubble.visible').forEach(b => b.classList.remove('visible'));
+    document.querySelectorAll('.hint-btn.open').forEach(b => b.classList.remove('open'));
+
+    if (!isOpen) {
+      bubble.classList.add('visible');
+      btn.classList.add('open');
+    }
+  }
+
+  document.addEventListener('click', function(e) {
+    if (!e.target.closest('.hint-wrapper')) {
+      document.querySelectorAll('.hint-bubble.visible').forEach(b => b.classList.remove('visible'));
+      document.querySelectorAll('.hint-btn.open').forEach(b => b.classList.remove('open'));
+    }
+  });
+</script>
+
+</body>
+</html>
