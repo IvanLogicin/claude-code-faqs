@@ -311,6 +311,33 @@
     .card ul { margin: 0 0 0 14px; }
     .card p  { font-size: 0.8rem; margin: 0; }
 
+    pre {
+      background: #1a1a2e;
+      color: #c8d8f8;
+      border-radius: 6px;
+      padding: 12px 16px;
+      font-family: "JetBrains Mono", "Fira Mono", "Cascadia Code", monospace;
+      font-size: 0.75rem;
+      line-height: 1.6;
+      overflow-x: auto;
+      margin: 8px 0;
+    }
+
+    pre code {
+      background: none;
+      color: inherit;
+      padding: 0;
+      font-size: inherit;
+      border-radius: 0;
+    }
+
+    .os-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 10px;
+      margin: 7px 0;
+    }
+
     footer {
       text-align: center;
       color: #8a9ab8;
@@ -324,7 +351,7 @@
 <header>
   <h1>Claude Code &mdash; FAQ &amp; Reference</h1>
   <p>A structured summary of common questions about Claude Code: how it works, what it can access, and how to get the most out of it. Intended as a starting point for internal FAQ documentation.</p>
-  <p class="meta">Compiled from a team Q&amp;A session &bull; March 2026</p>
+  <p class="meta">Compiled from a team Q&amp;A session &bull; v0.6 &bull; April 2026</p>
 </header>
 
 <nav>
@@ -337,6 +364,7 @@
   <a href="#google">Google Docs</a>
   <a href="#sessions">Sessions &amp; Context</a>
   <a href="#claudemd">CLAUDE.md Files</a>
+  <a href="#safety">Safety &amp; Guardrails</a>
 </nav>
 
 <main>
@@ -683,6 +711,18 @@
 
       <h3>Auto-Deletion Policy</h3>
       <p>There is no documented auto-expiry for sessions. Files persist until you delete them manually. Sessions are small (a long conversation is typically only a few MB), so disk space is rarely a concern. To manually remove a session, delete its <code>.jsonl</code> file from the project folder under <code>~/.claude/projects/</code>.</p>
+
+      <h3>Naming &amp; Renaming Sessions</h3>
+      <p>By default, sessions receive an auto-generated name. You can assign custom names for easier identification and resumption:</p>
+      <table>
+        <thead><tr><th>Method</th><th>Command</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td>Name at launch</td><td><code>claude -n "session-name"</code></td><td>Sets the name before the session starts</td></tr>
+          <tr><td>Rename mid-session</td><td><code>/rename</code></td><td>Also updates the name shown in the prompt bar</td></tr>
+          <tr><td>Resume by name</td><td><code>claude --resume "session-name"</code></td><td>Skips the interactive picker entirely</td></tr>
+        </tbody>
+      </table>
+      <p>Suggested naming convention: <code>project-topic-date</code> &mdash; e.g., <code>logicinbound-migration-2026-04-13</code>. Consistent names make sessions easy to find in the <code>/resume</code> picker without scrolling.</p>
     </div>
   </section>
 
@@ -748,13 +788,116 @@
           <code>CLAUDE.md</code> is just a plain text Markdown file — you can edit it at any time in any text editor. Changes take effect at the start of the next session (or if Claude re-reads it mid-session using the Read tool).
         </div>
       </div>
+
+      <h3>Overriding Global Rules in a Project File</h3>
+      <p>When a project <code>CLAUDE.md</code> covers the same category as the global file, the project version takes precedence. To make the intent explicit, mark the section header with <strong>(overrides global)</strong> — e.g., <code>## Tone (overrides global)</code>. For single-line overrides, build the exception into the rule itself rather than repeating the full section. This avoids redundancy while keeping the override unambiguous.</p>
+
+      <h3>Example: Global CLAUDE.md</h3>
+      <p>The following is a real-world global <code>CLAUDE.md</code> file (<code>~/.claude/CLAUDE.md</code>) compiled during a team onboarding session. It covers safety guardrails, tone, behavior, and coding standards suitable for use across all projects on a Linux machine:</p>
+<pre><code># Global Claude Code Instructions
+
+## Local Operations &amp; Safety
+
+- Never modify files or folders before backing them up in non-git projects. In git projects, treat version control as the backup.
+- Never delete files. Instead, make a list of files to be deleted as a plain .txt file and present it for review.
+- Never run `rm -rf` under any circumstances.
+- Never run `rm` on a directory, even with `-r` or `-R` flags.
+- Never use the `-f` (force) flag on any `rm`, `git`, or `mv` command.
+- Never run `dd`, `mkfs`, `fdisk`, or any disk-level commands.
+- Never run `chmod` or `chown` on files outside the current working directory.
+- Never read, display, log, or include the contents of .env files, credential files, or any file containing API keys, tokens, or passwords.
+- Never commit or write secrets to any file that is tracked by git.
+- If a task requires a secret or credential, ask me to provide it directly rather than reading it from a file.
+
+## Tone
+
+- Unless overridden by project-specific Tone instructions, always lean towards concise answers but not so extreme as laconic speak.
+- During collaborative planning, be more verbose when detail aids understanding.
+- Skip flattery and compliments unless explicitly asked for a judgement.
+- Use short affirmations like "Yes", "Yep", and "True" instead of longer ones like "Correct", "Exactly", "Precisely", "You are right", "You've got it", and similar.
+
+## Behavior
+
+- Criticism is welcome. Ask sanity-check questions if something seems impossible or impractical.
+- Suggest an alternative approach if it would use fewer tokens, is simpler, is less risky, or produces a better result.
+- If in doubt or hitting a snag, suggest an alternative way to proceed and wait for confirmation before continuing.
+- When in thinking mode and performing or planning a task, think in terms of first principles while planning out steps ahead.
+
+## Coding
+
+- Reuse existing code: always check for existing functions and constants before creating new ones. Read files thoroughly before writing new functions.
+- Maintain consistent naming: follow established patterns throughout the codebase.
+- Study the codebase first: thoroughly examine existing patterns before contributing.</code></pre>
+    </div>
+  </section>
+
+  <!-- 10. SAFETY GUARDRAILS & AUTO-APPROVE MODE -->
+  <section id="safety">
+    <div class="section-header">
+      <span class="icon">&#128737;&#65039;</span>
+      <h2>Safety Guardrails &amp; Auto-Approve Mode</h2>
+    </div>
+    <div class="section-body">
+      <p>Claude Code can execute bash commands, edit files, and navigate your entire filesystem — anywhere your OS user has access. This makes it powerful, but also means mistakes can have real consequences. Understanding permissions and guardrails is essential before doing serious work.</p>
+
+      <h3>What Is Auto-Approve Mode</h3>
+      <p>By default, Claude Code <strong>prompts you for confirmation</strong> before running bash commands and other potentially impactful actions. In <strong>auto-approve mode</strong>, it skips those prompts and runs commands immediately without review.</p>
+      <p>Most reported incidents &mdash; including accidental <code>rm -rf</code> deletions &mdash; happened in auto-approve mode combined with vague instructions like "clean up the project". Claude executed what it inferred was correct, without a human review step to catch the mistake.</p>
+
+      <h3>How to Check Your Mode</h3>
+      <p>Check your settings file:</p>
+      <pre><code>cat ~/.claude/settings.json</code></pre>
+      <p>An empty result (<code>{}</code>) means you are on defaults &mdash; <strong>auto-approve is OFF</strong>, which is the safe state. Always review bash commands in the confirmation prompt before approving, regardless of what your <code>CLAUDE.md</code> says &mdash; instructions are guidance, not a hard technical lock.</p>
+
+      <h3>Recommended CLAUDE.md Guardrails (Linux)</h3>
+      <p>These rules belong in your global <code>~/.claude/CLAUDE.md</code> to prevent the most dangerous classes of mistakes:</p>
+      <ul>
+        <li>Never run <code>rm -rf</code> under any circumstances</li>
+        <li>Never run <code>rm</code> on a directory, even with <code>-r</code> or <code>-R</code> flags</li>
+        <li>Never use the <code>-f</code> (force) flag on <code>rm</code>, <code>git</code>, or <code>mv</code></li>
+        <li>Never run <code>dd</code>, <code>mkfs</code>, <code>fdisk</code>, or any disk-level commands</li>
+        <li>Never run <code>chmod</code> or <code>chown</code> on files outside the working directory</li>
+        <li>Never read, display, or log <code>.env</code> files or credential files</li>
+        <li>Never delete files &mdash; instead produce a list of candidates for the user to review</li>
+      </ul>
+
+      <h3>Portability Across Operating Systems</h3>
+      <p>The <strong>logic</strong> behind these guardrails is universal, but the specific commands and paths are OS-dependent:</p>
+      <div class="os-grid">
+        <div class="card">
+          <h4>Linux</h4>
+          <ul>
+            <li>Guardrails above apply as-is</li>
+            <li>Protect: <code>/etc</code>, <code>/usr</code>, <code>/bin</code>, <code>/boot</code>, <code>/var</code></li>
+            <li>Dangerous: <code>rm</code>, <code>dd</code>, <code>chmod</code>, <code>fdisk</code></li>
+          </ul>
+        </div>
+        <div class="card">
+          <h4>macOS</h4>
+          <ul>
+            <li>Same commands apply (Unix base)</li>
+            <li>Also protect: <code>/System</code>, <code>/Library</code>, <code>/Applications</code></li>
+            <li>Tone/Behavior/Coding sections portable as-is</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h4>Windows</h4>
+          <ul>
+            <li>Safety section needs a full rewrite</li>
+            <li>Dangerous: <code>del /f</code>, <code>rd /s /q</code>, PowerShell <code>Remove-Item -Recurse</code></li>
+            <li>Protect: <code>C:\Windows</code>, <code>C:\Program Files</code></li>
+            <li>Tone/Behavior/Coding sections portable as-is</li>
+          </ul>
+        </div>
+      </div>
+      <p>If you share a <code>CLAUDE.md</code> file with teammates on different OSes, the Tone, Behavior, and Coding sections transfer directly. The Safety section should be treated as OS-specific and rewritten per platform.</p>
     </div>
   </section>
 
 </main>
 
 <footer>
-  <p>Generated by Claude Code (Sonnet 4.6) &bull; March 2026 &bull; For internal use &mdash; verify details before publishing externally</p>
+  <p>Generated by Claude Code (Sonnet 4.6) &bull; April 2026 &bull; For internal use &mdash; verify details before publishing externally</p>
 </footer>
 
 <script>
